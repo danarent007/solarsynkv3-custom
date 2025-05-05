@@ -89,7 +89,8 @@ for serialitem in inverterserials:
             (getapi.GetBatteryData, "Battery Data"),
             (getapi.GetLoadData, "Load Data"),
             (getapi.GetOutputData, "Output Data"),
-            (getapi.GetDCACTemp, "DC & AC Temperature Data")
+            (getapi.GetDCACTemp, "DC & AC Temperature Data"),
+            (getapi.GetFlowData, "Flow Data"),
         ]
 
         # Start threaded API calls

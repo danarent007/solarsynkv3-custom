@@ -487,6 +487,58 @@ def GetLoadData(Token,Serial):
     except json.JSONDecodeError:
         print(ConsoleColor.FAIL + "Error: Failed to parse Sunsynk API response." + ConsoleColor.ENDC)          
         
+def GetFlowData(Token, Serial):
+    import json
+    import requests
+    from datetime import datetime
+    
+    class ConsoleColor:    
+        OKBLUE = "\033[34m"
+        OKCYAN = "\033[36m"
+        OKGREEN = "\033[32m"        
+        MAGENTA = "\033[35m"
+        WARNING = "\033[33m"
+        FAIL = "\033[31m"
+        ENDC = "\033[0m"
+        BOLD = "\033[1m" 
+        
+    # Inverter URL
+    #curl -s -k -X GET -H "Content-Type: application/json" -H "authorization: Bearer $ServerAPIBearerToken" "https://api.sunsynk.net/api/v1/inverter/$inverter_serial/output/day?lan=en&date=$VarCurrentDate&column=all" -o "flowdata.json"
+    inverter_url = f"https://api.sunsynk.net/api/v1/inverter/{Serial}/flow"
+    # Headers (Fixed Bearer token format)
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {Token}"
+    }
+
+    try:
+        # Corrected to use GET request
+        response = requests.get(inverter_url, headers=headers, timeout=10)
+        response.raise_for_status()
+
+        parsed_inverter_json = response.json()
+
+        if parsed_inverter_json.get('msg') == "Success": 
+            #print(parsed_inverter_json)
+            postapi.PostHAEntity(Serial,"W","power","Smart Load Power","smart_load_power",str(parsed_inverter_json['data']['smartLoadPower']))
+            postapi.PostHAEntity(Serial,"W","power","UPS Load Power","ups_load_power",str(parsed_inverter_json['data']['upsLoadPower']))
+            postapi.PostHAEntity(Serial,"W","power","Home Load Power","home_load_power",str(parsed_inverter_json['data']['homeLoadPower']))
+            postapi.PostHAEntity(Serial,"W","power","CT Clamp Load Power","ct_load_power",str(parsed_inverter_json['data']['gridOrMeterPower']))
+
+
+
+            print("Flow data fetch response: " + ConsoleColor.OKGREEN + parsed_inverter_json['msg'] + ConsoleColor.ENDC)
+            print("Flow data fetch response: " + ConsoleColor.OKCYAN + str(parsed_inverter_json['data']) + ConsoleColor.ENDC)            
+            print(ConsoleColor.OKGREEN + "Flow data fetch complete" + ConsoleColor.ENDC)
+        else:
+            print("Flow data fetch response: " + ConsoleColor.FAIL + parsed_inverter_json['msg'] + ConsoleColor.ENDC)
+
+    except requests.exceptions.Timeout:
+        print(ConsoleColor.FAIL + "Error: Request timed out while connecting to Sunsynk API." + ConsoleColor.ENDC)
+
+    except requests.exceptions.RequestException as e:
+        print(ConsoleColor.FAIL + f"Error: Failed to connect to Sunsynk API.")
+
 def GetOutputData(Token,Serial):
     import json
     import requests
